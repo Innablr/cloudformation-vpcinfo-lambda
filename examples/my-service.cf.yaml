@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template for Squid Proxy Farm
+Parameters:
+  TemplatesS3Bucket:
+    Type: String
+    Description: S3 Bucket with the components templates
+  InstallationName:
+    Type: String
+    Description: Unique stack installation name
+  RuntimeEnvironment:
+    Type: String
+    Description: The runtime environment config tag
+    Default: dev
+  Route53ZoneDomain:
+    Type: String
+    Description: Route53 zone domain that represents the environment
+  VpcId:
+    Description: VPC to deploy the proxy infrastructure into
+    Type: AWS::EC2::VPC::Id
+  VpcInfoLambdaCode:
+    Type: String
+    Description: S3 key with the VPC info lambda function source
+
+Resources:
+  GetVpcInfoExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: GetVpcInfoWriteLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogStream
+                  - logs:CreateLogGroup
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                  - arn:aws:logs:*:*:*
+        - PolicyName: GetVpcInfoPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - ec2:DescribeVpcs
+                Effect: Allow
+                Resource: '*'
+
+  GetVpcInfoLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref TemplatesS3Bucket
+        S3Key: !Ref VpcInfoLambdaCode
+      Description: Provides various VPC information to CF
+      Handler: getVpcInfo.handler
+      MemorySize: 128
+      Role: !GetAtt GetVpcInfoExecutionRole.Arn
+      Runtime: nodejs8.10
+      Timeout: 15
+
+  VpcInfo:
+    Type: Custom::VpcInfo
+    Properties:
+      VpcId: !Ref VpcId
+      ServiceToken: !GetAtt GetVpcInfoLambda.Arn
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows access to the My Service
+      SecurityGroupIngress:
+        - CidrIp: !GetAtt VpcInfo.VpcCidr
+          FromPort: 3128
+          ToPort: 3128
+          IpProtocol: 6
+      VpcId:
+        Ref: VpcId

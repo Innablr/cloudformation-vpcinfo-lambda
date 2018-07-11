@@ -1,0 +1,16 @@
+{
+  "name": "getvpcinfo",
+  "version": "1.0.0",
+  "description": "Custom CF resource that returns various information about a VPC",
+  "main": "getVpcInfo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alex Bukharov <Alex.Bukharov@innablr.com>",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.198.0",
+    "cfn-response-promise": "^1.0.1",
+    "ipaddress": "^0.2.5"
+  }
+}
