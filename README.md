@@ -3,7 +3,7 @@ get-vpc-info
 
 This Lambda function implements a custom Cloudformation resource that return information about a VPC such as CIDR and AWS provided DNS servers.
 
-This function easily integrates into the Innablr CloudFormation deployment automation *cloudformation-ops-seed* (https://bitbucket.org/innablr/cloudformation-ops-seed.git).
+This function easily integrates into the Innablr CloudFormation deployment automation *cloudformation-seed* (https://github.com/Innablr/cloudformation-seed).
 
 Include it into your project
 ------
